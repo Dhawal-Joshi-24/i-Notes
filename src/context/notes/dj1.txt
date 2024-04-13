@@ -1,0 +1,128 @@
+import { useState } from "react";
+import NoteContext from "./NoteContext";
+
+
+const NoteState = (props) => {
+  const host = "http://localhost:5000"
+  const notesInitial = [  ]
+  const [note, setnote] = useState(notesInitial)
+
+  //get all note
+  const getNote = async () => {
+    //api call
+    const response = await fetch(`${host}/api/notes/fetchallnotes`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'auth-token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYzYTU5NDQ1NTZkYTg2OTFmNzU1OGU4MyIsImlhdCI6MTY3MTc5ODIxNH0.KQWQYsgg_hv4OdJwneRuLML7zf1qiB9y6UoQUbpIT1I'
+      }
+    });
+    const json = await response.json();
+    console.log(json);
+    setnote(json);
+  }
+
+  //Add a note
+  const addNote = async (title, description, tag) => {
+    //api call
+    const response = await fetch(`${host}/api/notes/addnotes`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'auth-token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYzYTU5NDQ1NTZkYTg2OTFmNzU1OGU4MyIsImlhdCI6MTY3MTc5ODIxNH0.KQWQYsgg_hv4OdJwneRuLML7zf1qiB9y6UoQUbpIT1I'
+      },
+      body: JSON.stringify({ title, description, tag })
+    });
+
+    console.log("Adding a new note")
+    const notee = {
+      "_id": "63a6b1160522655a9f5c8ff6a9",
+      "user": "63a5944556da86941f7558e83",
+      "title": title,
+      "description": description,
+      "tag": tag,
+      "date": "2022-12-24T07:58:14.271Z",
+      "__v": 0
+    };
+    setnote(note.concat(notee))
+  }
+
+  //Delete a note
+  const deleteNote = async (id) => {
+    //api call
+    const response = await fetch(`${host}/api/notes/deletenote/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'auth-token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYzYTU5NDQ1NTZkYTg2OTFmNzU1OGU4MyIsImlhdCI6MTY3MTc5ODIxNH0.KQWQYsgg_hv4OdJwneRuLML7zf1qiB9y6UoQUbpIT1I'
+      }
+    });
+    const json = await response.json();
+    console.log(json);
+  
+    console.log("Deleting the note with id" + id);
+    const newNotes = note.filter((note) => { return note._id !== id })
+    setnote(newNotes)
+  }
+  //Edit a note
+  const editNote = async (id, title, description, tag) => {
+    //api call
+    const response = await fetch(`${host}/api/notes/updatenote/${id}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'auth-token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYzYTU5NDQ1NTZkYTg2OTFmNzU1OGU4MyIsImlhdCI6MTY3MTc5ODIxNH0.KQWQYsgg_hv4OdJwneRuLML7zf1qiB9y6UoQUbpIT1I'
+      },
+      body: JSON.stringify({ title, description, tag })
+    });
+    for (let index = 0; index < note.length; index++) {
+      const element = note[index];
+      if (element._id === id) {
+        element.title = title;
+        element.description = description;
+        element.tag = tag;
+      }
+    }
+  }
+
+  return (
+    <NoteContext.Provider value={{ note, addNote, deleteNote, editNote, getNote }}>
+      {props.children}
+    </NoteContext.Provider>
+  )
+
+}
+
+
+export default NoteState;
+-------------------------------------------------------------------------------
+
+
+import React, { useContext } from 'react'
+import noteContext from "../context/notes/NoteContext"
+
+
+const NoteItem = (props) => {
+
+
+    const context = useContext(noteContext);
+    const { deleteNote } = context;
+    const { note, updateNote } = props;
+
+    return (
+        <div className="col-md-3 ">
+            <div className="card my-3" >
+                <div className="card-body">
+                    <div className="d-flex align-item-center">
+                        <h5 className="card-title">{note.title}</h5>
+                        <i className="fa-regular fa-pen-to-square mx-2" onClick={()=>{updateNote(note)}} ></i>
+                        <i className="fa-solid fa-trash mx-2" onClick={()=>{deleteNote(note._id)}}></i>
+                    </div>
+                    <p className="card-text">{note.description}</p>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+export default NoteItem
